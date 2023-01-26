@@ -1,32 +1,60 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+
+import { groupsGetAll } from '@storage/group/groupsGetAll';
+import { FlatList } from 'react-native';
+
+import { GroupsContainer } from "./styles";
 
 import { GroupCard } from "@components/GroupCard";
-import { Header } from "@components/Header";
-import { Highlight } from "@components/Highlight";
-import { GroupsContainer } from "./styles";
 import { ListEmpty } from '@components/ListEmpty';
-
-import { FlatList } from 'react-native';
+import { Highlight } from "@components/Highlight";
+import { Header } from "@components/Header";
 import { Button } from '@components/Button';
 
 
 export function Groups() {
-  const [groups, setGroups] = useState<string[]>(["Galera do baba", "Galera da NFL"]);
+  const [groups, setGroups] = useState<string[]>([]);
+
+  const navigation = useNavigation()
+
+  function handleOpenGroup(group: string){
+    navigation.navigate('players', {group})
+  }
+
+  function handleNewGroup() {
+    navigation.navigate('new')
+  }
+
+  async function fetchGroups() {
+    try {
+      const data = await groupsGetAll();
+      setGroups(data)
+
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useFocusEffect(useCallback(() => {
+    fetchGroups()
+  }, []))
 
   return (
 
     <GroupsContainer>
       <Header />
-      <Highlight 
+      <Highlight
         title="Turmas"
         subtitle="jogue com sua turma"
       />
-      <FlatList 
+      <FlatList
         data={groups}
         keyExtractor={item => item}
         renderItem={({ item }) => (
-          <GroupCard 
-            title={item} 
+          <GroupCard
+            title={item}
+            onPress={() => handleOpenGroup(item)}
           />
         )}
         contentContainerStyle={groups.length === 0 && { flex: 1 }}
@@ -36,7 +64,8 @@ export function Groups() {
       />
 
       <Button
-      title='Criar nova turma'
+        title='Criar nova turma'
+        onPress={handleNewGroup}
       />
     </GroupsContainer>
   );
